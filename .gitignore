@@ -3,3 +3,4 @@ bin
 .ionide
 paket-files
 .DS_Store
+.idea/

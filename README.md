@@ -13,10 +13,11 @@ printfn "RESULT: %s" t
 
 ## How to use sample
 
-1. Have .Net 5 preview 1 installed
-2. Run `dotnet publish --project src/DependencyManager.FsProj`
-3. To run sample script from `test.fsx` file run `dotnet fsi --langversion:preview --compilertool:./src/DependencyManager.FsProj/bin/Debug/netstandard2.0/publish test.fsx`
-4. Alternatively, start FSI in interactive mode with `dotnet fsi --langversion:preview --compilertool:./src/DependencyManager.FsProj/bin/Debug/netstandard2.0/publish` and type above script by hand.
+1. Have .NET 5 preview 1 installed
+2. Alternatively, Start a Docker container with the latest preview interactively `docker run --rm -it -v "${pwd}:/app" -w "/app" mcr.microsoft.com/dotnet/core/sdk:5.0.100-preview bash` or run `run.ps1` with PowerShell.
+3. Run `dotnet publish src/DependencyManager.FsProj`
+4. To run sample script from `test.fsx` file run `dotnet fsi --langversion:preview --compilertool:./src/DependencyManager.FsProj/bin/Debug/netstandard2.0/publish test.fsx`
+5. Alternatively, start FSI in interactive mode with `dotnet fsi --langversion:preview --compilertool:./src/DependencyManager.FsProj/bin/Debug/netstandard2.0/publish` and type above script by hand.
 
 ## How to contribute
 
