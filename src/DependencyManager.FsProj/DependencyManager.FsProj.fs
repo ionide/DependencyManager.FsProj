@@ -6,6 +6,7 @@ open System.IO
 open Ionide.ProjInfo
 open Ionide.ProjInfo.Types
 open Ionide.ProjInfo.ProjectSystem
+open FSharp.DependencyManager.Nuget
 open Extensions
 
 /// A marker attribute to tell FCS that this assembly contains a Dependency Manager, or
@@ -79,12 +80,6 @@ type FsProjDependencyManager(outputDirectory: string option) =
     |]
 
     member _.ResolveDependencies(scriptDir: string, mainScriptName: string, scriptName: string, packageManagerTextLines: string seq, targetFramework: string) : ResolveDependenciesResult =
-        let scriptDir =
-            if scriptDir = System.String.Empty then
-                System.Environment.CurrentDirectory
-            else
-                scriptDir
-
         try
             let dotnetExe, sdk = SdkSetup.getSdkFor (DirectoryInfo __SOURCE_DIRECTORY__)
             let toolsPath = SdkSetup.setupForSdk (dotnetExe, sdk)
@@ -96,16 +91,31 @@ type FsProjDependencyManager(outputDirectory: string option) =
                 |> List.ofSeq
             let projs = loader.LoadProjects projectPaths
 
+            let allProjs =
+                let rec loop (projsToAdd : ProjectOptions seq) =
+                    seq {
+                        yield! projsToAdd
+                        let refs = 
+                            projsToAdd 
+                            |> Seq.collect (fun p -> p.ReferencedProjects) 
+                            |> Seq.map (fun p -> p.ProjectFileName)
+                            |> Seq.distinct
+                            |> List.ofSeq
+                        if not (List.isEmpty refs) then
+                            yield! loop (loader.LoadProjects refs)
+                    }
+                loop projs
+
             let sourceFiles = 
-                projs 
+                allProjs 
                 |> Seq.collect (fun proj -> proj.SourceFiles) 
                 |> Seq.distinct
                 |> List.ofSeq
 
-            let loadScriptPath = Path.Combine(workingDirectory.Value, $"{mainScriptName}.fsx")
+            let loadScriptPath = Path.Combine(workingDirectory.Value, $"load-dependencies-{mainScriptName}")
             let toScriptRef path = "#r @\"" + path + "\"" + Environment.NewLine
             let packages =
-                projs 
+                allProjs 
                 |> Seq.collect (fun proj -> proj.PackageReferences)
                 |> Seq.map (fun pref -> pref.FullPath)
             let loadScriptContent =
@@ -126,6 +136,12 @@ type FsProjDependencyManager(outputDirectory: string option) =
                         $"  >{line}"
                     $"TargetFramework: {targetFramework}"
                     $"================================"
+                    $"All projects:"
+                    for proj in allProjs do
+                        $" >{proj.ProjectFileName}: {proj.ProjectSdkInfo.TargetFramework} (IsRestored: {proj.ProjectSdkInfo.RestoreSuccess})"
+                        $" >References:"
+                        for pr in proj.ReferencedProjects do
+                            $"   >{pr.ProjectFileName}"
                     $"Source files:"
                     for sourceFile in sourceFiles do
                         $" >{sourceFile}"
