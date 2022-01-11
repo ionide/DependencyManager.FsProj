@@ -1,5 +1,3 @@
-#r "fsproj: ./test/test.fsproj"
+#r @"fsproj: C:\Users\tomas\source\farmer-1\src\Farmer\Farmer.fsproj"
 
-open test
-
-Say.hello "DependencyManager.FsProj"
+open Farmer.Builders

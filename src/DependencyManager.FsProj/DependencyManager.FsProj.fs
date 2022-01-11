@@ -125,6 +125,18 @@ type FsProjDependencyManager(outputDirectory: string option) =
                 |> String.concat Environment.NewLine
             emitFile loadScriptPath loadScriptContent
 
+            let notRestored =
+                allProjs
+                |> Seq.filter (fun proj -> not proj.ProjectSdkInfo.RestoreSuccess)
+                |> Seq.map (fun proj -> proj.ProjectFileName)
+            
+            let stdError =
+                if not (Seq.isEmpty notRestored) then
+                    notRestored
+                    |> Seq.append ["Please restore following projects with 'dotnet restore': "]
+                    |> Array.ofSeq
+                else [||]
+
             let output =
                 [|
                     $"================================"
@@ -154,7 +166,7 @@ type FsProjDependencyManager(outputDirectory: string option) =
                     $"--------------------------------"
 
                 |]
-            ResolveDependenciesResult(true, output, [||], [], [ loadScriptPath; yield! sourceFiles ], [])
+            ResolveDependenciesResult(true, output, stdError, [], [ loadScriptPath; yield! sourceFiles ], [])
         with e -> 
             printfn "exception while resolving dependencies: %s" (string e)
             ResolveDependenciesResult(false, [||], [| e.ToString() |], [], [], [])
