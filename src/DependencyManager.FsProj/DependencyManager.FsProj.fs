@@ -73,6 +73,9 @@ type FsProjDependencyManager(outputDirectory: string option) =
             File.WriteAllText(path, content)
         with _ -> ()
 
+    let dotnetRestore (dotnetExe: FileInfo) projPath =
+        System.Diagnostics.Process.Start(dotnetExe.FullName, [ "restore"; projPath ]).WaitForExit()
+
     member val Key = "fsproj" with get
     member val Name = "FsProj Dependency Manager" with get
     member _.HelpMessages = [|
@@ -89,6 +92,8 @@ type FsProjDependencyManager(outputDirectory: string option) =
                 packageManagerTextLines 
                 |> Seq.map (fun line -> Path.Combine (scriptDir, line))
                 |> List.ofSeq
+
+            projectPaths |> List.iter (dotnetRestore dotnetExe)
             let projs = loader.LoadProjects projectPaths
 
             let allProjs =
@@ -112,17 +117,22 @@ type FsProjDependencyManager(outputDirectory: string option) =
                 |> Seq.distinct
                 |> List.ofSeq
 
-            let loadScriptPath = Path.Combine(workingDirectory.Value, $"load-dependencies-{mainScriptName}")
+            let loadScriptPath = 
+                Path.Combine(workingDirectory.Value, $"load-dependencies-{Path.GetFileName mainScriptName}")
+            
             let toScriptRef path = "#r @\"" + path + "\"" + Environment.NewLine
+            
             let packages =
                 allProjs 
                 |> Seq.collect (fun proj -> proj.PackageReferences)
                 |> Seq.map (fun pref -> pref.FullPath)
+            
             let loadScriptContent =
                 packages
                 |> Seq.distinct
                 |> Seq.map toScriptRef
                 |> String.concat Environment.NewLine
+
             emitFile loadScriptPath loadScriptContent
 
             let notRestored =
@@ -140,6 +150,7 @@ type FsProjDependencyManager(outputDirectory: string option) =
             let output =
                 [|
                     $"================================"
+                    $"Wordir: {workingDirectory.Value}"
                     $"ScriptDir: {scriptDir}"
                     $"MainScriptName: {mainScriptName}"
                     $"ScriptName: {scriptName}"
@@ -162,7 +173,7 @@ type FsProjDependencyManager(outputDirectory: string option) =
                         $" >{package}"
                     $"Load script: {loadScriptPath}"
                     $"--------------------------------"
-                    $"{File.ReadAllText loadScriptPath}"
+                    //$"{File.ReadAllText loadScriptPath}"
                     $"--------------------------------"
 
                 |]
