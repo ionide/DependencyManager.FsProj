@@ -24,7 +24,8 @@ System.Diagnostics.Process.Start(dotnetExe.FullName, [ "restore"; "./test/test.f
 
 let (loader: IWorkspaceLoader) = WorkspaceLoader.Create(toolsPath)
 
-let projPath = Path.GetFullPath "./test/test.fsproj"
+//let projPath = Path.GetFullPath "./test/test.fsproj"
+let projPath = Path.GetFullPath "C:/Users/tomas/source/farmer-1/src/Farmer/Farmer.fsproj"
 loader.LoadProjects [projPath]
 let proj = loader.LoadProjects [ projPath ] |> Seq.head
 

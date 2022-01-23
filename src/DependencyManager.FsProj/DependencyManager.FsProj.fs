@@ -149,33 +149,32 @@ type FsProjDependencyManager(outputDirectory: string option) =
 
             let output =
                 [|
-                    $"================================"
-                    $"Wordir: {workingDirectory.Value}"
-                    $"ScriptDir: {scriptDir}"
-                    $"MainScriptName: {mainScriptName}"
-                    $"ScriptName: {scriptName}"
-                    $"PackageManagerTextLines:"
-                    for line in packageManagerTextLines do
-                        $"  >{line}"
-                    $"TargetFramework: {targetFramework}"
-                    $"================================"
-                    $"All projects:"
-                    for proj in allProjs do
-                        $" >{proj.ProjectFileName}: {proj.ProjectSdkInfo.TargetFramework} (IsRestored: {proj.ProjectSdkInfo.RestoreSuccess})"
-                        $" >References:"
-                        for pr in proj.ReferencedProjects do
-                            $"   >{pr.ProjectFileName}"
-                    $"Source files:"
-                    for sourceFile in sourceFiles do
-                        $" >{sourceFile}"
-                    $"Packages:"
-                    for package in packages do
-                        $" >{package}"
-                    $"Load script: {loadScriptPath}"
-                    $"--------------------------------"
+                    // $"================================"
+                    // $"WorkingDirectory: {workingDirectory.Value}"
+                    // $"ScriptDir: {scriptDir}"
+                    // $"MainScriptName: {mainScriptName}"
+                    // $"ScriptName: {scriptName}"
+                    // $"PackageManagerTextLines:"
+                    // for line in packageManagerTextLines do
+                    //     $"  >{line}"
+                    // $"TargetFramework: {targetFramework}"
+                    // $"================================"
+                    // $"All projects:"
+                    // for proj in allProjs do
+                    //     $" >{proj.ProjectFileName}: {proj.ProjectSdkInfo.TargetFramework} (IsRestored: {proj.ProjectSdkInfo.RestoreSuccess})"
+                    //     $" >References:"
+                    //     for pr in proj.ReferencedProjects do
+                    //         $"   >{pr.ProjectFileName}"
+                    // $"Source files:"
+                    // for sourceFile in sourceFiles do
+                    //     $" >{sourceFile}"
+                    // $"Packages:"
+                    // for package in packages do
+                    //     $" >{package}"
+                    // $"Load script: {loadScriptPath}"
+                    // $"--------------------------------"
                     //$"{File.ReadAllText loadScriptPath}"
-                    $"--------------------------------"
-
+                    // $"--------------------------------"
                 |]
             ResolveDependenciesResult(true, output, stdError, [], [ loadScriptPath; yield! sourceFiles ], [])
         with e -> 
