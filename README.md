@@ -1,6 +1,6 @@
-## DependencyManager.FsProj
+# DependencyManager.FsProj
 
-**Highly experimental**
+This is still **experimental**.
 
 Sample Dependency Manager for `dotnet fsi` for F# 5 preview 1. It extends `#r` syntax with `fsproj` dependency manager, so you can do `#r "fsproj: PATH_TO_FSPROJ.fsproj"` and it will load all references and files from the project.
 
@@ -35,7 +35,6 @@ The contribution guidelines outline the process that you'll need to follow to ge
 And you don't just have to write code. You can help out by writing documentation, tests, or even by giving feedback about this work. (And yes, that includes giving feedback about the contribution guidelines.)
 
 Thank you for contributing!
-
 
 ## Contributing and copyright
 
