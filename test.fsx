@@ -1,14 +1,5 @@
-#r @"fsproj: C:\Users\tomas\source\farmer-1\src\Farmer\Farmer.fsproj"
+#r @"fsproj: ./test/test.fsproj"
 
-open Farmer
-open Farmer.Builders
+open test
 
-let storage = storageAccount {
-    name "hello"
-}
-
-let x = arm {
-    add_resource storage
-}
-
-x.Template |> Writer.toJson
+Say.hello "World"

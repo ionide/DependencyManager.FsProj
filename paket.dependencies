@@ -1,5 +1,4 @@
 source https://api.nuget.org/v3/index.json
-source ./lib
 
 storage: none
 framework: net50,net60,netstandard2.0
