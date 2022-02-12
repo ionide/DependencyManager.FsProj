@@ -1,2 +1,5 @@
 group Test
-Newtonsoft.Json
+Expecto
+YoloDev.Expecto.TestSdk
+Microsoft.NET.Test.Sdk
+FSharp.Core

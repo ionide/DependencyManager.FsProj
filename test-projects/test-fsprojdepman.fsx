@@ -1,9 +1,10 @@
 #r "nuget: Ionide.ProjInfo"
 #r "nuget: Ionide.ProjInfo.ProjectSystem"
 
-#load "./src/DependencyManager.FsProj/Extensions.fs"
-#load "./src/DependencyManager.FsProj/DependencyManager.FsProj.fs"
+#load "../src/Extensions.fs"
+#load "../src/DependencyManager.FsProj.fs"
 
+open System.IO
 open DependencyManager.FsProj
 
 let depMan = FsProjDependencyManager(Some __SOURCE_DIRECTORY__)

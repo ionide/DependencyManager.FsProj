@@ -13,7 +13,7 @@ fsi.AddPrintTransformer(fun (v: SemanticVersioning.Version) -> v.ToString())
 fsi.AddPrintTransformer(fun (sdk: SdkDiscovery.DotnetSdkInfo) -> $"{sdk.Version}: {sdk.Path}")
 fsi.AddPrintTransformer(fun (dt: DateTime) -> dt.ToString("dd.MM.yyyy HH:mm"))
 
-#load "./src/DependencyManager.FsProj/Extensions.fs"
+#load "../src/Extensions.fs"
 
 open Extensions
 

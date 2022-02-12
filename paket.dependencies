@@ -9,4 +9,14 @@ group Test
     storage: none
     source https://www.nuget.org/api/v2
     source https://api.nuget.org/v3/index.json
+    nuget Expecto
+    nuget YoloDev.Expecto.TestSdk
+    nuget Microsoft.NET.Test.Sdk
+    nuget FSharp.Core
+
+
+group TestProjects
+    storage: none
+    source https://www.nuget.org/api/v2
+    source https://api.nuget.org/v3/index.json
     nuget Newtonsoft.Json

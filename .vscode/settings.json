@@ -1,5 +1,5 @@
 {
   "FSharp.fsiExtraParameters": [
-    "--compilertool:./src/DependencyManager.FsProj/bin/Debug/net5.0/publish"
+    "--compilertool:./src/bin/Debug/net5.0/publish"
   ]
 }
