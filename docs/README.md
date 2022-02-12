@@ -20,6 +20,6 @@ After that you can call `dotnet fsi --compilertool:./.depman script.fsx` or add 
 
 ```json
   "FSharp.fsiExtraParameters": [
-    "--compilertool:DIRECTORY_CONTAINING_DEPENDENCY_MANAGER"
+    "--compilertool:./.depman"
   ]
 ```
