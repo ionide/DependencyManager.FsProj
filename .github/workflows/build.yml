@@ -1,4 +1,4 @@
-name: .NET
+name: Build master
 
 on:
   push:
@@ -17,6 +17,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
+    - name: Restore dotnet tools
+      run: dotnet tool restore
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
