@@ -35,9 +35,7 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet tool restore; dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet tool restore
     - name: Publish DependencyManager.FsProj
       uses: brandedoutcast/publish-nuget@v2.5.2
       with:
