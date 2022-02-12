@@ -73,7 +73,7 @@ type FsProjDependencyManager(outputDirectory: string option) =
         with _ -> ()
 
     let loadAllProjects scriptDir packageManagerTextLines =
-        let dotnetExe, sdk = SdkSetup.getSdkFor (DirectoryInfo __SOURCE_DIRECTORY__)
+        let dotnetExe, sdk = SdkSetup.getSdkFor (DirectoryInfo scriptDir)
         let toolsPath = SdkSetup.setupForSdk (dotnetExe, sdk)
         let (loader: IWorkspaceLoader) = WorkspaceLoader.Create(toolsPath)
         let projectPaths = 
