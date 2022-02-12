@@ -10,6 +10,7 @@
       To use it install nuget package and add command line option "--compilertool:directory_containing_dependencymanager"
       or if you are using ionide add the line to "FSharp.fsiExtraParameters".
     </Description>
+    <PackageReadmeFile>NUGET_README.md</PackageReadmeFile>
     <PackageProjectUrl></PackageProjectUrl>
   </PropertyGroup>
   <ItemGroup>
