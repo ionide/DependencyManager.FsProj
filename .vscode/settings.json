@@ -1,8 +1,8 @@
 {
   "FSharp.fsiExtraParameters": [
-    "--compilertool:./src/bin/Debug/net5.0/publish"
+    "--compilertool:./.depman"
   ],
   "yaml.schemas": {
-    "https://json.schemastore.org/github-workflow.json": "file:///c%3A/Users/tomas/source/DependencyManager.FsProj/.github/workflows/build.yml"
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/build.yml"
   }
 }
