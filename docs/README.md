@@ -20,6 +20,6 @@ Add following to your workspace or user settings.json.
 
 ```json
   "FSharp.fsiExtraParameters": [
-    "--compilertool:c:\Users\YOUR_USERNAME\.nuget\packages\dependencymanager.fsproj\0.1.0\lib\net5.0\"
+    "--compilertool:c:\Users\YOUR_USERNAME\.nuget\packages\dependencymanager.fsproj\0.1.1\lib\net5.0\"
   ]
 ```

@@ -34,7 +34,7 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-    - name: Restore dependencies
+    - name: Restore tools
       run: dotnet tool restore
     - name: Publish DependencyManager.FsProj
       uses: brandedoutcast/publish-nuget@v2.5.2
