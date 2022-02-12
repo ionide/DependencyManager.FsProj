@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <PackageId>DependencyManager.FsProj</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Authors>Tomas Leko</Authors>
     <Description>
       This nuget package enables loading .fsproj files in .fsx scripts. 
@@ -11,12 +11,15 @@
       or if you are using ionide add the line to "FSharp.fsiExtraParameters".
     </Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageProjectUrl></PackageProjectUrl>
+    <PackageLicenseUrl>LICENSE.md</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/ThisFunctionalTom/DependencyManager.FsProj</PackageProjectUrl>
+    <PackageRepositoryUrl>https://github.com/ThisFunctionalTom/DependencyManager.FsProj</PackageRepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />
     <Compile Include="DependencyManager.FsProj.fs" />
     <None Include="..\docs\README.md" Pack="true" PackagePath="\"/>
+    <None Include="..\LICENSE.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
