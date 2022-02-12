@@ -1,8 +1,6 @@
 # DependencyManager.FsProj
 
-This is still **experimental**.
-
-Sample Dependency Manager for `dotnet fsi` for F# 5 preview 1. It extends `#r` syntax with `fsproj` dependency manager, so you can do `#r "fsproj: PATH_TO_FSPROJ.fsproj"` and it will load all references and files from the project.
+Sample Dependency Manager for `dotnet fsi`. It extends `#r` syntax with `fsproj` dependency manager, so you can do `#r "fsproj: PATH_TO_FSPROJ.fsproj"` and it will load all references and files from the project.
 
 ```fsharp
 #r "fsproj: ./test/test.fsproj"
@@ -11,14 +9,31 @@ let t = test.Say.hello "Chris"
 printfn "RESULT: %s" t
 ```
 
-## How to use sample
+## Build locally
 
-1. Have .NET 5 preview 1 installed
-2. Alternatively, Start a Docker container with the latest preview interactively `docker run --rm -it -v "${pwd}:/app" -w "/app" mcr.microsoft.com/dotnet/core/sdk:5.0.100-preview bash` or run `run.ps1` with PowerShell.
-3. Restore the dependencies `dotnet restore -s "${pwd}/lib`
-4. Run `dotnet publish src/DependencyManager.FsProj/`
-5. To run sample script from `test.fsx` file run `dotnet fsi --langversion:preview --compilertool:./src/DependencyManager.FsProj/bin/Debug/netstandard2.0/publish test.fsx`
-6. Alternatively, start FSI in interactive mode with `dotnet fsi --langversion:preview --compilertool:./src/DependencyManager.FsProj/bin/Debug/netstandard2.0/publish` and type above script by hand.
+1. Clone the repository
+2. run `dotnet tool restore; dotnet publish ./src`
+
+Note: You need to restart vscode if Ionide has locked the DependencyManager.FsProj.dll
+
+## How to try it with Ionide
+
+1. [Build locally](#build-locally)
+2. Check workspace vscode settings (.vscode/settings.json) contains
+
+    ```json
+        "FSharp.fsiExtraParameters": [
+        "--compilertool:./src/bin/Debug/net5.0/publish"
+        ]
+    ```
+
+3. Eventually restart Visual Studio Code
+4. Open "./test-projects/test.fsx" and it should actually work
+
+## How to try it with command line
+
+1. [Build locally](#build-locally)
+2. run `dotnet fsi --compilertool:./src/bin/Debug/net5.0/publish ./test-projects/test.fsx`
 
 ## How to contribute
 
