@@ -13,8 +13,6 @@ type String with
             path + string Path.DirectorySeparatorChar
 
 module SdkSetup =
-    open Ionide.ProjInfo
-    open Ionide.ProjInfo.Types
     open System.Reflection
     open System.Runtime.Loader
 
@@ -68,25 +66,5 @@ module SdkSetup =
 
 module DotNet =
     let restore (dotnetExe: FileInfo) projPath =
+        printfn $"Restoring '{projPath}'..."
         System.Diagnostics.Process.Start(dotnetExe.FullName, [ "restore"; projPath ]).WaitForExit()
-
-type IWorkspaceLoader with
-    member loader.LoadAllProjectsRecursively (dotnetExe, projectPaths) =
-        projectPaths |> List.iter (DotNet.restore dotnetExe)
-        let projs = loader.LoadProjects projectPaths
-
-        let rec loop (projsToAdd : ProjectOptions seq) =
-            projectPaths |> List.iter (DotNet.restore dotnetExe)
-            seq {
-                yield! projsToAdd
-                let refs = 
-                    projsToAdd 
-                    |> Seq.collect (fun p -> p.ReferencedProjects) 
-                    |> Seq.map (fun p -> p.ProjectFileName)
-                    |> Seq.distinct
-                    |> List.ofSeq
-                if not (List.isEmpty refs) then
-                    refs |> List.iter (DotNet.restore dotnetExe)
-                    yield! loop (loader.LoadProjects refs)
-            }
-        loop projs

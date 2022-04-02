@@ -44,6 +44,73 @@ type ResolveDependenciesResult (success: bool, stdOut: string array, stdError: s
     /// The roots to package directories
     member _.Roots = roots
 
+module FsProjDependencyManager =
+    let loadAllProjects scriptDir packageManagerTextLines =
+        let dotnetExe, sdk = SdkSetup.getSdkFor (DirectoryInfo scriptDir)
+        let toolsPath = SdkSetup.setupForSdk (dotnetExe, sdk)
+        let (loader: IWorkspaceLoader) = WorkspaceLoader.Create(toolsPath)
+        let projectPaths = 
+            packageManagerTextLines 
+            |> Seq.map (fun line -> Path.Combine (scriptDir, line))
+            |> Seq.distinct
+            |> List.ofSeq
+        loader.LoadProjects projectPaths |> List.ofSeq
+
+    let sortByDependencies (projs: ProjectOptions list) =
+        let map = projs |> List.map (fun p -> p.ProjectFileName, p) |> Map.ofList
+        let edges =
+            projs
+            |> List.map (fun p -> p.ProjectFileName, p.ReferencedProjects |> List.map (fun pr -> pr.ProjectFileName))
+
+        let rec loop sorted toSort =
+            match toSort |> List.partition (snd >> List.isEmpty) with
+            | [], [] -> sorted
+            | [], _ -> failwith "Cycle found"
+            | noDeps, withDeps ->
+                let projsNoDeps = noDeps |> List.map fst
+                let sorted' = sorted @ projsNoDeps
+                let removeDeps (p, deps) =
+                    p, deps |> List.filter (fun d -> not (projsNoDeps |> List.contains d))
+                let toSort' = 
+                    withDeps |> List.map removeDeps
+                loop sorted' toSort'
+        
+        loop [] edges
+        |> List.map (fun projName -> Map.find projName map)
+
+    let getPackageReferences projects =
+        projects
+        |> List.collect (fun proj -> proj.PackageReferences)
+        |> List.map (fun pref -> pref.FullPath)
+        |> List.distinct
+
+    let getSourceFiles projects =
+        projects
+        |> sortByDependencies 
+        |> List.collect (fun proj -> proj.SourceFiles) 
+        |> List.distinct
+
+    let generateLoadScriptContent projects =
+        let toScriptRef path = "#r @\"" + path + "\""
+
+        let packages = getPackageReferences projects
+
+        [ for package in packages do
+            toScriptRef package ]
+        |> String.concat Environment.NewLine
+
+    let getErrors (projects: ProjectOptions seq) =
+        let notRestored =
+            projects
+            |> Seq.filter (fun proj -> not proj.ProjectSdkInfo.RestoreSuccess)
+            |> Seq.map (fun proj -> proj.ProjectFileName)
+            
+        if not (Seq.isEmpty notRestored) then
+            notRestored
+            |> Seq.append ["Please restore following projects with 'dotnet restore': "]
+            |> Array.ofSeq
+        else [||]
+
 [<DependencyManager>]
 /// the type _must_ take an optional output directory
 type FsProjDependencyManager(outputDirectory: string option) =
@@ -72,50 +139,7 @@ type FsProjDependencyManager(outputDirectory: string option) =
             File.WriteAllText(path, content)
         with _ -> ()
 
-    let loadAllProjects scriptDir packageManagerTextLines =
-        let dotnetExe, sdk = SdkSetup.getSdkFor (DirectoryInfo scriptDir)
-        let toolsPath = SdkSetup.setupForSdk (dotnetExe, sdk)
-        let (loader: IWorkspaceLoader) = WorkspaceLoader.Create(toolsPath)
-        let projectPaths = 
-            packageManagerTextLines 
-            |> Seq.map (fun line -> Path.Combine (scriptDir, line))
-            |> Seq.distinct
-            |> List.ofSeq
-        loader.LoadAllProjectsRecursively(dotnetExe, projectPaths)
-
-    let getSourceFiles projects =
-        projects 
-        |> Seq.collect (fun proj -> proj.SourceFiles) 
-        |> Seq.distinct
-        |> List.ofSeq
-
-    let generateLoadScriptContent projects =
-        let toScriptRef path = "#r @\"" + path + "\"" + Environment.NewLine
-
-        let packages =
-            projects
-            |> Seq.collect (fun proj -> proj.PackageReferences)
-            |> Seq.map (fun pref -> pref.FullPath)
-        
-        packages
-        |> Seq.distinct
-        |> Seq.map toScriptRef
-        |> String.concat Environment.NewLine
-
-    let getErrors (projects: ProjectOptions seq) =
-        let notRestored =
-            projects
-            |> Seq.filter (fun proj -> not proj.ProjectSdkInfo.RestoreSuccess)
-            |> Seq.map (fun proj -> proj.ProjectFileName)
-            
-        if not (Seq.isEmpty notRestored) then
-            notRestored
-            |> Seq.append ["Please restore following projects with 'dotnet restore': "]
-            |> Array.ofSeq
-        else [||]
-
-
-    let generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework (projects: ProjectOptions seq) sourceFiles loadScriptContent =
+    let generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework (projects: ProjectOptions seq) loadScriptContent =
         [|
             $"================================"
             $"WorkingDirectory: {workingDirectory.Value}"
@@ -129,13 +153,7 @@ type FsProjDependencyManager(outputDirectory: string option) =
             $"================================"
             $"All projects:"
             for proj in projects do
-                $" >{proj.ProjectFileName}: {proj.ProjectSdkInfo.TargetFramework} (IsRestored: {proj.ProjectSdkInfo.RestoreSuccess})"
-                $" >References:"
-                for pr in proj.ReferencedProjects do
-                    $"   >{pr.ProjectFileName}"
-            $"Source files:"
-            for sourceFile in sourceFiles do
-                $" >{sourceFile}"
+                $" > {proj.ProjectFileName}: {proj.ProjectSdkInfo.TargetFramework} (IsRestored: {proj.ProjectSdkInfo.RestoreSuccess}, References: {proj.ReferencedProjects.Length})"
             $"Load script content:"
             $"--------------------------------"
             $"{loadScriptContent}"
@@ -150,17 +168,17 @@ type FsProjDependencyManager(outputDirectory: string option) =
 
     member _.ResolveDependencies(scriptDir: string, mainScriptName: string, scriptName: string, packageManagerTextLines: HashRLines, targetFramework: TFM) : ResolveDependenciesResult =
         try
-            let allProjects = loadAllProjects scriptDir packageManagerTextLines
-            let sourceFiles = getSourceFiles allProjects
-            let loadScriptContent = generateLoadScriptContent allProjects
+            let allProjects = FsProjDependencyManager.loadAllProjects scriptDir packageManagerTextLines
+            let loadScriptContent = FsProjDependencyManager.generateLoadScriptContent allProjects
             let loadScriptPath = Path.Combine(workingDirectory.Value, $"load-dependencies-{Path.GetFileName mainScriptName}")
+            let sourceFiles = FsProjDependencyManager.getSourceFiles allProjects
 
             emitFile loadScriptPath loadScriptContent
 
-            let stdError = getErrors allProjects
-            let output = generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework allProjects sourceFiles loadScriptContent
-            
-            ResolveDependenciesResult(true, output, stdError, [], [ loadScriptPath; yield! sourceFiles ], [])
+            let stdError = FsProjDependencyManager.getErrors allProjects
+            let output = generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework allProjects loadScriptContent
+
+            ResolveDependenciesResult(true, output, stdError, [], (loadScriptPath :: sourceFiles), [])
         with e -> 
             printfn "exception while resolving dependencies: %s" (string e)
             ResolveDependenciesResult(false, [||], [| e.ToString() |], [], [], [])
