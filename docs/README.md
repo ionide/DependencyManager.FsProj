@@ -3,6 +3,15 @@
 This nuget package enables loading `.fsproj` files in `.fsx` scripts.
 It extends `#r` syntax with `fsproj` dependency manager, so you can do `#r "fsproj: PATH_TO_FSPROJ.fsproj"` and it will load all references and files from the project.
 
+Sample:
+
+```fsharp
+#r "fsproj: ./test/test.fsproj"
+
+let t = test.Say.hello "Chris"
+printfn "RESULT: %s" t
+```
+
 ## Installation
 
 If you are using powershell you can use following script to install dependency manager to current directory. Probably a similar script for linux shell will also work.
