@@ -2,7 +2,9 @@
 #r "nuget: Newtonsoft.Json"
 
 open Newtonsoft.Json
-
 open test
 
-Say.hello "World"
+Person.create "Albert" 76 
+|> JsonConvert.SerializeObject
+|> printfn "%s"
+

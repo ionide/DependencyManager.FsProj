@@ -6,8 +6,4 @@
   <ItemGroup>
     <Compile Include="Library.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

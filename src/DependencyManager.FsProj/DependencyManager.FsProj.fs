@@ -6,7 +6,6 @@ open System.IO
 open Ionide.ProjInfo
 open Ionide.ProjInfo.Types
 open Ionide.ProjInfo.ProjectSystem
-open FSharp.DependencyManager.Nuget
 open Extensions
 
 /// A marker attribute to tell FCS that this assembly contains a Dependency Manager, or
@@ -176,7 +175,8 @@ type FsProjDependencyManager(outputDirectory: string option) =
             emitFile loadScriptPath loadScriptContent
 
             let stdError = FsProjDependencyManager.getErrors allProjects
-            let output = generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework allProjects loadScriptContent
+            //let output = generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework allProjects loadScriptContent
+            let output = [||]
 
             ResolveDependenciesResult(true, output, stdError, [], (loadScriptPath :: sourceFiles), [])
         with e -> 
