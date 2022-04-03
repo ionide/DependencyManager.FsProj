@@ -53,6 +53,7 @@ module FsProjDependencyManager =
             |> Seq.map (fun line -> Path.Combine (scriptDir, line))
             |> Seq.distinct
             |> List.ofSeq
+        projectPaths |> List.iter (DotNet.restore dotnetExe)
         loader.LoadProjects projectPaths |> List.ofSeq
 
     let sortByDependencies (projs: ProjectOptions list) =
