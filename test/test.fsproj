@@ -16,7 +16,7 @@
     <PackageReference Update="FSharp.Core" Version="4.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\DependencyManager.FsProj.fsproj" />
+    <ProjectReference Include="..\src\DependencyManager.FsProj\DependencyManager.FsProj.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

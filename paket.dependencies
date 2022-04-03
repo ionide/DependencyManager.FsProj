@@ -1,14 +1,17 @@
 source https://www.nuget.org/api/v2
 source https://api.nuget.org/v3/index.json
 storage: none
+
 nuget FSharp.Core
-nuget Ionide.ProjInfo
-nuget Ionide.ProjInfo.ProjectSystem
+nuget Ionide.ProjInfo ~> 0.55.4
+nuget Ionide.ProjInfo.ProjectSystem ~> 0.55.4
+nuget Ionide.ProjInfo.Sln ~> 0.55.4
 
 group Test
     storage: none
     source https://www.nuget.org/api/v2
     source https://api.nuget.org/v3/index.json
+
     nuget Expecto
     nuget YoloDev.Expecto.TestSdk
     nuget Microsoft.NET.Test.Sdk
@@ -19,4 +22,6 @@ group TestProjects
     storage: none
     source https://www.nuget.org/api/v2
     source https://api.nuget.org/v3/index.json
+
+    nuget FSharp.Core
     nuget Newtonsoft.Json

@@ -40,5 +40,5 @@ jobs:
     - name: Publish DependencyManager.FsProj
       uses: brandedoutcast/publish-nuget@v2.5.2
       with:
-          PROJECT_FILE_PATH: src/DependencyManager.FsProj.fsproj
+          PROJECT_FILE_PATH: src/depman-fsproj/depman-fsproj.fsproj
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}

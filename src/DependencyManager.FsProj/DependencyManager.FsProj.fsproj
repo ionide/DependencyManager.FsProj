@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <PackageId>DependencyManager.FsProj</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Extensions.fs" />
+    <Compile Include="DependencyManager.FsProj.fs" />
+  </ItemGroup>
+  <ItemGroup>
+        <None Include="..\..\docs\README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\LICENSE.md" Pack="true" PackagePath="\"/>        
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

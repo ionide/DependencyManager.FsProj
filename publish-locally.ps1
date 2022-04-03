@@ -1,8 +1,6 @@
-$workdir=".workdir"
-$outdir=".depman"
-Remove-Item -Recurse -ErrorAction SilentlyContinue $workdir
-Remove-Item -Recurse -ErrorAction SilentlyContinue $outdir
-dotnet new classlib -o $workdir -n depman
-dotnet add $workdir reference ./src/DependencyManager.FsProj.fsproj
-dotnet publish $workdir -o $outdir
-Remove-Item -Recurse $workdir
+$nupkg=".nupkg"
+$toolPath=".depman-fsproj"
+Remove-Item -Recurse -ErrorAction SilentlyContinue $toolPath
+dotnet pack -o $nupkg
+dotnet tool install --tool-path $toolPath --add-source $nupkg --ignore-failed-sources depman-fsproj
+& $toolPath\depman-fsproj.exe

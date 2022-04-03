@@ -5,9 +5,11 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0C3E2DE1-181B-425D-B264-FA57AA656DE7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DependencyManager.FsProj", "src\DependencyManager.FsProj.fsproj", "{16D1C80D-80C5-4C84-B9B5-30A791F31322}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DependencyManager.FsProj", "src\DependencyManager.FsProj\DependencyManager.FsProj.fsproj", "{16D1C80D-80C5-4C84-B9B5-30A791F31322}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "test", "test\test.fsproj", "{5558DAB8-BB9B-4465-9C5C-2E3FCC1A4CF3}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "depman-fsproj", "src\depman-fsproj\depman-fsproj.fsproj", "{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,8 +48,21 @@ Global
 		{5558DAB8-BB9B-4465-9C5C-2E3FCC1A4CF3}.Release|x64.Build.0 = Release|Any CPU
 		{5558DAB8-BB9B-4465-9C5C-2E3FCC1A4CF3}.Release|x86.ActiveCfg = Release|Any CPU
 		{5558DAB8-BB9B-4465-9C5C-2E3FCC1A4CF3}.Release|x86.Build.0 = Release|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Debug|x64.Build.0 = Debug|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Debug|x86.Build.0 = Debug|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Release|x64.ActiveCfg = Release|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Release|x64.Build.0 = Release|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Release|x86.ActiveCfg = Release|Any CPU
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{16D1C80D-80C5-4C84-B9B5-30A791F31322} = {0C3E2DE1-181B-425D-B264-FA57AA656DE7}
+		{93A5D397-1CA8-4B5E-92A2-7ED4DA2602F8} = {0C3E2DE1-181B-425D-B264-FA57AA656DE7}
 	EndGlobalSection
 EndGlobal
