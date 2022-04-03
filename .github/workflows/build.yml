@@ -37,7 +37,7 @@ jobs:
         dotnet-version: 5.0.x
     - name: Restore tools
       run: dotnet tool restore
-    - name: Publish DependencyManager.FsProj
+    - name: Publish depman-fsproj
       uses: brandedoutcast/publish-nuget@v2.5.2
       with:
           PROJECT_FILE_PATH: src/depman-fsproj/depman-fsproj.fsproj
