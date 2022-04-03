@@ -14,50 +14,14 @@ printfn "RESULT: %s" t
 
 ## Installation
 
-If you are using powershell you can use following script to install dependency manager to current directory. Probably a similar script for linux shell will also work.
-
-```powershell
-$workdir=".workdir"
-$outdir=".depman"
-dotnet new classlib -o $workdir -n depman
-dotnet add $workdir package DependencyManager.FsProj
-dotnet publish $workdir -o $outdir
-Remove-Item -Recurse $workdir
-```
-
-After that you can call `dotnet fsi --compilertool:./.depman script.fsx` or add following line to vscode settings.json.
-
-```json
-  "FSharp.fsiExtraParameters": [
-    "--compilertool:./.depman"
-  ]
-```
+Run `dotnet tool install --global depman-fsproj` and once it is installed run `depman-fsproj` for instructions.
 
 ## Build locally
 
 1. Clone the repository
-2. run `dotnet tool restore; dotnet publish ./src`
-
-Note: You need to restart vscode if Ionide has locked the DependencyManager.FsProj.dll
-
-## How to try it with Ionide
-
-1. [Build locally](#build-locally)
-2. Check workspace vscode settings (.vscode/settings.json) contains
-
-    ```json
-        "FSharp.fsiExtraParameters": [
-        "--compilertool:./src/bin/Debug/net5.0/publish"
-        ]
-    ```
-
-3. Eventually restart Visual Studio Code
-4. Open "./test-projects/test.fsx" and it should actually work
-
-## How to try it with command line
-
-1. [Build locally](#build-locally)
-2. run `dotnet fsi --compilertool:./src/bin/Debug/net5.0/publish ./test-projects/test.fsx`
+2. run `dotnet tool restore; dotnet build`
+3. increment version in `Directory.Build.props`
+4. run `publish-locally.ps1`
 
 ## How to contribute
 
