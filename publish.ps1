@@ -1,9 +1,10 @@
-[CmdletBinding()]
-param (
-    [Parameter(Mandatory=$true)]
-    [string]
-    $Version
-)
+$existing = git tag -l
+[xml]$buildProps = Get-Content -Path ".\Directory.Build.props"
+$version = $buildProps.Project.PropertyGroup.Version
 
-git tag -a $Version -m "Release $Version"
-git push --tags
+if ($existing -contains $version) {
+    Write-Host "Tag $version already exists"
+} else {
+    git tag $version
+    git push --tags
+}
