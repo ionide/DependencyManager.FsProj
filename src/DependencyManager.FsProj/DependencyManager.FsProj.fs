@@ -44,17 +44,12 @@ type ResolveDependenciesResult (success: bool, stdOut: string array, stdError: s
     member _.Roots = roots
 
 module FsProjDependencyManager =
-    let loadAllProjects scriptDir packageManagerTextLines =
-        let dotnetExe, sdk = SdkSetup.getSdkFor (DirectoryInfo scriptDir)
+    let loadProjects baseDir (projects: string list) =
+        let dotnetExe, sdk = DirectoryInfo baseDir |> SdkSetup.getSdkFor
         let toolsPath = SdkSetup.setupForSdk (dotnetExe, sdk)
-        let (loader: IWorkspaceLoader) = WorkspaceLoader.Create(toolsPath)
-        let projectPaths = 
-            packageManagerTextLines 
-            |> Seq.map (fun line -> Path.Combine (scriptDir, line))
-            |> Seq.distinct
-            |> List.ofSeq
-        projectPaths |> List.iter (DotNet.restore dotnetExe)
-        loader.LoadProjects projectPaths |> List.ofSeq
+        let loader : IWorkspaceLoader =  WorkspaceLoader.Create toolsPath
+        projects |> List.iter (DotNet.restore dotnetExe)
+        loader.LoadProjects projects |> List.ofSeq
 
     let sortByDependencies (projs: ProjectOptions list) =
         let map = projs |> List.map (fun p -> p.ProjectFileName, p) |> Map.ofList
@@ -90,15 +85,9 @@ module FsProjDependencyManager =
         |> List.collect (fun proj -> proj.SourceFiles) 
         |> List.distinct
 
-    let generateLoadScriptContent projects =
-        let toScriptRef path = "#r @\"" + path + "\""
-
-        let packages = getPackageReferences projects
-
-        [ for package in packages do
-            toScriptRef package ]
-        |> String.concat Environment.NewLine
-
+    let toHashRLine package = "#r @\"" + package + "\""
+    let toLoadSourceLine sourceFile = "#load @\"" + sourceFile + "\""
+    
     let getErrors (projects: ProjectOptions seq) =
         let notRestored =
             projects
@@ -168,18 +157,19 @@ type FsProjDependencyManager(outputDirectory: string option) =
 
     member _.ResolveDependencies(scriptDir: string, mainScriptName: string, scriptName: string, packageManagerTextLines: HashRLines, targetFramework: TFM) : ResolveDependenciesResult =
         try
-            let allProjects = FsProjDependencyManager.loadAllProjects scriptDir packageManagerTextLines
-            let loadScriptContent = FsProjDependencyManager.generateLoadScriptContent allProjects
-            let loadScriptPath = Path.Combine(workingDirectory.Value, $"load-dependencies-{Path.GetFileName mainScriptName}")
-            let sourceFiles = FsProjDependencyManager.getSourceFiles allProjects
+            let projectPaths = 
+                packageManagerTextLines
+                |> List.ofSeq
+                |> List.map (fun line -> Path.Combine(scriptDir, line) |> Path.GetFullPath)
+            let projects = FsProjDependencyManager.loadProjects scriptDir projectPaths
+            let packageReferences = FsProjDependencyManager.getPackageReferences projects
+            let sourceFiles = FsProjDependencyManager.getSourceFiles projects
 
-            emitFile loadScriptPath loadScriptContent
-
-            let stdError = FsProjDependencyManager.getErrors allProjects
+            let stdError = FsProjDependencyManager.getErrors projects
             //let output = generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework allProjects loadScriptContent
             let output = [||]
 
-            ResolveDependenciesResult(true, output, stdError, [], (loadScriptPath :: sourceFiles), [])
+            ResolveDependenciesResult(true, output, stdError, packageReferences, sourceFiles, [])
         with e -> 
             printfn "exception while resolving dependencies: %s" (string e)
             ResolveDependenciesResult(false, [||], [| e.ToString() |], [], [], [])

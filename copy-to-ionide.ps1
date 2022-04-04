@@ -1,0 +1,1 @@
+Copy-Item .\src\DependencyManager.FsProj\bin\Debug\net6.0\DependencyManager.FsProj.dll $HOME\.vscode\extensions\ionide.ionide-fsharp-5.12.0\bin
