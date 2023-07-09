@@ -3,9 +3,9 @@ source https://api.nuget.org/v3/index.json
 storage: none
 
 nuget FSharp.Core
-nuget Ionide.ProjInfo ~> 0.55.4
-nuget Ionide.ProjInfo.ProjectSystem ~> 0.55.4
-nuget Ionide.ProjInfo.Sln ~> 0.55.4
+nuget Ionide.ProjInfo
+nuget Ionide.ProjInfo.ProjectSystem
+nuget Ionide.ProjInfo.Sln
 
 group Test
     storage: none
