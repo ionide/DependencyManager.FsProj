@@ -1,9 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <PackageId>depman-fsproj</PackageId>
     <TargetFramework>net7.0</TargetFramework>
     <PackageId>DependencyManager.FsProj</PackageId>
-   <OutputType>Exe</OutputType>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>depman-fsproj</ToolCommandName>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />
