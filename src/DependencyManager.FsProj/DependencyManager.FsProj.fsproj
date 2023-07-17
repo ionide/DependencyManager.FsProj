@@ -3,7 +3,6 @@
   <PropertyGroup>
     <PackageId>depman-fsproj</PackageId>
     <TargetFramework>net7.0</TargetFramework>
-    <PackageId>DependencyManager.FsProj</PackageId>
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>depman-fsproj</ToolCommandName>
