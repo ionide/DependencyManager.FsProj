@@ -4,7 +4,6 @@
 open Newtonsoft.Json
 open test
 
-Person.create "Albert" 76 
+Person.create "Albert" 76
 |> JsonConvert.SerializeObject
 |> printfn "%s"
-

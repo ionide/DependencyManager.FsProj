@@ -64,7 +64,22 @@ module SdkSetup =
                 | [||] -> failwith $"Could not find .NET SDK {sdkVersionAtPath}. Please install it."
                 | found -> exe, Array.head found
 
+module Process =
+    open System.Diagnostics
+
+    let execute filePath arguments =
+        let pi = ProcessStartInfo(
+            filePath,
+            Arguments=arguments,
+            RedirectStandardError=true,
+            RedirectStandardOutput=true)
+        let proc = Process.Start(pi)
+        proc.WaitForExit()
+        let output = proc.StandardOutput.ReadToEnd()
+        let stdError = proc.StandardError.ReadToEnd()
+        output, stdError
+
 module DotNet =
     let restore (dotnetExe: FileInfo) projPath =
-        printfn $"Restoring '{projPath}'..."
-        System.Diagnostics.Process.Start(dotnetExe.FullName, [ "restore"; projPath ]).WaitForExit()
+        Process.execute dotnetExe.FullName $"restore \"{projPath}\""
+        |> ignore

@@ -4,8 +4,6 @@ storage: none
 
 nuget FSharp.Core
 nuget Ionide.ProjInfo
-nuget Ionide.ProjInfo.ProjectSystem
-nuget Ionide.ProjInfo.Sln
 
 group Test
     storage: none
