@@ -1,8 +1,10 @@
-#r @"fsproj: ./SimpleLib/SimpleLib.fsproj"
-#r "nuget: Newtonsoft.Json"
+#r @"fsproj: ./SomeLibWithProjectRefsAndNuget/SomeLibWithProjectRefsAndNuget.fsproj"
 
 open Newtonsoft.Json
-open test
+open SomeLib
+open SomeLibWithProjectRefsAndNuget
+
+Say.hello "Word"
 
 Person.create "Albert" 76
 |> JsonConvert.SerializeObject
