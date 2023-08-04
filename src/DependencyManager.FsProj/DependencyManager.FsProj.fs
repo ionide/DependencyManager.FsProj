@@ -2,104 +2,159 @@
 
 open System
 open System.Diagnostics
-open System.IO
 open System.Text.Json
-open Ionide.ProjInfo
-open Ionide.ProjInfo.Types
+open System.IO
 open Extensions
+open Ionide.ProjInfo
 
-type Dependencies = {
-    References: string list
-    Sources: string list
-}
+type FsProjDependencies =
+    {
+        ProjectPath: string
+        References: string list
+        Sources: string list
+    }
+
+type FsProjDependenciesResult =
+    {
+        Projects: string list
+        References: string list
+        Sources: string list
+    }
 
 module FsProjDependencyManager =
+    open System.Text.RegularExpressions
 
-    let loadProjects baseDir (projects: string list) =
+    let getOrCreateWorkingDirectory (outputDirectory: string option) =
+        // Calculate the working directory for dependency management
+        //   if a path wasn't supplied to the dependency manager then use the temporary directory as the root
+        //   if a path was supplied if it was rooted then use the rooted path as the root
+        //   if the path wasn't supplied or not rooted use the temp directory as the root.
+        let directory =
+            let path =
+                Path.Combine(Process.GetCurrentProcess().Id.ToString() + "--" + Guid.NewGuid().ToString())
+
+            match outputDirectory with
+            | None -> Path.Combine(Path.GetTempPath(), path)
+            | Some v ->
+                if Path.IsPathRooted(v) then
+                    Path.Combine(v, path)
+                else
+                    Path.Combine(Path.GetTempPath(), path)
+
+        lazy
+            try
+                if not (Directory.Exists(directory)) then
+                    Directory.CreateDirectory(directory) |> ignore
+
+                directory
+            with _ ->
+                directory
+
+    let getProjectPaths (scriptDir: DirectoryInfo) (packageManagerTextLines: string list) =
+        packageManagerTextLines
+        |> List.map (fun line ->
+            if Path.IsPathRooted line then
+                line
+            else
+                Path.Combine(scriptDir.FullName, line) |> Path.GetFullPath)
+
+    let loadProjects (baseDir: DirectoryInfo) (projects: FileInfo list) =
         let notifications = ResizeArray()
-        let dotnetExe, sdk = DirectoryInfo baseDir |> SdkSetup.getSdkFor
-        notifications.Add $"Using SDK version: {sdk.Version}"
-        let toolsPath = Init.init (DirectoryInfo baseDir) (Some dotnetExe)
-        let loader : IWorkspaceLoader =  WorkspaceLoader.Create toolsPath
+        let dotnetExe, _sdk = baseDir |> SdkSetup.getSdkFor
+        let toolsPath = Init.init baseDir (Some dotnetExe)
+
+        do projects |> Seq.iter (DotNet.restore dotnetExe)
+
+        let loader: IWorkspaceLoader = WorkspaceLoader.Create toolsPath
         use _ = loader.Notifications.Subscribe(fun n -> notifications.Add $"%A{n}")
-        projects |> List.iter (DotNet.restore dotnetExe)
-        //let binlogDir = DirectoryInfo (Path.Combine(baseDir,"binlogDir"))
-        //let projects = loader.LoadProjects(projects, [], BinaryLogGeneration.Within binlogDir) |> List.ofSeq
-        let projects = loader.LoadProjects projects |> List.ofSeq
-        projects, notifications.ToArray()
-
-    let sortByDependencies (projs: ProjectOptions list) =
-        let map = projs |> List.map (fun p -> p.ProjectFileName, p) |> Map.ofList
-        let edges =
-            projs
-            |> List.map (fun p -> p.ProjectFileName, p.ReferencedProjects |> List.map (fun pr -> pr.ProjectFileName))
-
-        let rec loop sorted toSort =
-            match toSort |> List.partition (snd >> List.isEmpty) with
-            | [], [] -> sorted
-            | [], _ -> failwith "Cycle found"
-            | noDeps, withDeps ->
-                let projsNoDeps = noDeps |> List.map fst
-                let sorted' = sorted @ projsNoDeps
-                let removeDeps (p, deps) =
-                    p, deps |> List.filter (fun d -> not (projsNoDeps |> List.contains d))
-                let toSort' =
-                    withDeps |> List.map removeDeps
-                loop sorted' toSort'
-
-        loop [] edges
-        |> List.map (fun projName -> Map.find projName map)
-
-    let getPackageReferences projects =
         projects
-        |> List.collect (fun proj -> proj.PackageReferences)
-        |> List.map (fun pref -> pref.FullPath)
-        |> List.distinct
+        |> List.map (fun fi -> fi.FullName)
+        |> loader.LoadProjects
+        |> List.ofSeq
+        |> List.map (fun proj ->
+            {
+                ProjectPath = proj.ProjectFileName
+                Sources = proj.SourceFiles
+                References = proj.PackageReferences |> List.map (fun pref -> pref.FullPath)
+            })
 
-    let getSourceFiles projects =
-        projects
-        |> sortByDependencies
-        |> List.collect (fun proj -> proj.SourceFiles)
-        |> List.distinct
+    let filterOut (suffixes: string list) (paths: string list) =
+        paths
+        |> List.filter (fun path -> suffixes |> List.exists (fun suffix -> not (path.EndsWith(suffix))) |> not)
+
+    let reAssemblyAttributes = Regex @"(\.NETCoreApp|\.NETStandard),Version=v\d+\.\d+\.AssemblyAttributes.fs$"
+    let reAssemblyInfo projectName = Regex @$"{projectName}.AssemblyInfo.fs$"
+
+    let filterOutGeneratedSourceFiles (projectPath: string) (sources: string list) =
+        let projectName = Path.GetFileNameWithoutExtension projectPath
+        let projectDir = Path.GetDirectoryName projectPath
+        let objDir = Path.Combine (projectDir, "obj")
+
+        let isGeneratedFile projectName (objDir: string) (path: string) =
+            let fileName = Path.GetFileName path
+            let isInObjDir = path.StartsWith objDir
+            let matchesGeneratedFileName =
+                [ reAssemblyAttributes; reAssemblyInfo projectName ]
+                |> List.exists (fun re -> re.IsMatch fileName)
+            isInObjDir && matchesGeneratedFileName
+
+        sources
+        |> List.filter (isGeneratedFile projectName objDir >> not)
+
+    let filterOutFrameworkReferences (references: string list) =
+        let isFSharpCore (path: string) =
+            Path.GetFileName path = "FSharp.Core.dll"
+
+        references
+        |> List.filter (isFSharpCore >> not)
+
+    let collectDependencies (projsDependencies: FsProjDependencies list) =
+        {
+            Projects = projsDependencies |> List.map (fun p -> p.ProjectPath)
+            References = projsDependencies |> List.collect (fun p -> filterOutFrameworkReferences p.References) |> List.distinct
+            Sources = projsDependencies |> List.collect (fun p -> filterOutGeneratedSourceFiles p.ProjectPath p.Sources) |> List.distinct
+        }
 
     let toHashRLine package = "#r @\"" + package + "\""
     let toLoadSourceLine sourceFile = "#load @\"" + sourceFile + "\""
 
-    let getErrors (projects: ProjectOptions seq) =
-        let notRestored =
-            projects
-            |> Seq.filter (fun proj -> not proj.ProjectSdkInfo.RestoreSuccess)
-            |> Seq.map (fun proj -> proj.ProjectFileName)
+    let resolveDependencies (baseDir: DirectoryInfo) (projects: FileInfo list) =
+        loadProjects baseDir projects
 
-        if not (Seq.isEmpty notRestored) then
-            notRestored
-            |> Seq.append ["Please restore following projects with 'dotnet restore': "]
-            |> Array.ofSeq
-        else [||]
+    type DummyForGettingAssmbly() = do ()
+    let getDependencyManagerPath () = typeof<DummyForGettingAssmbly>.Assembly.Location
 
-    let resolveDependencies baseDir (projects: string seq) =
-        let filterOutSuffixes (suffixes: string list) (arr: string list) =
-            arr
-            |> List.filter (fun str -> suffixes |> List.forall (fun suff -> not (str.EndsWith suff)))
+    let resolveDependenciesOutOfProcess (baseDir: DirectoryInfo) (projects: FileInfo list) =
+        let dotnet, _sdk = SdkSetup.getSdkFor baseDir
+        let depmanDll = getDependencyManagerPath()
+        let projectsAsArgs = projects |> List.map (fun fi -> fi.FullName) |> String.concat " "
+        let result = Process.execute baseDir dotnet $"{depmanDll} -o json {projectsAsArgs}"
+        JsonSerializer.Deserialize<FsProjDependencies list>(result.StdOut)
 
-        let dotnetExe, sdk = DirectoryInfo baseDir |> SdkSetup.getSdkFor
-        let depman = Reflection.Assembly.GetExecutingAssembly().Location
-        let arguments = projects |> String.concat " "
-        let stdOutput, stdError = Process.execute dotnetExe.FullName $"{depman} --json {arguments}"
-        let dependencies = JsonSerializer.Deserialize<Dependencies>(stdOutput)
+    let makeScriptFromReferences references =
+        [
+            "// Generated from #r \"fsproj:Package References\""
+            "// ============================================"
+            "// References"
+            "//"
+            yield! references |> List.map (fun r -> $"#r @\"{r}\"")
+        ]
+        |> String.concat Environment.NewLine
 
-        let references = dependencies.References // |> filterOutSuffixes [ "FSharp.Core.dll" ]
-        let sources = dependencies.Sources //|> filterOutSuffixes [ "AssemblyAttributes.fs"; "AssemblyInfo.fs" ]
-        references, sources, stdError.Split Environment.NewLine
+    let emitFile filePath (body: string) =
+        try
+            File.WriteAllText(filePath, body)
+        with _ ->
+            ()
 
 /// A marker attribute to tell FCS that this assembly contains a Dependency Manager, or
 /// that a class with the attribute is a DependencyManager
-[<AttributeUsage(AttributeTargets.Assembly ||| AttributeTargets.Class , AllowMultiple = false)>]
+[<AttributeUsage(AttributeTargets.Assembly ||| AttributeTargets.Class, AllowMultiple = false)>]
 type DependencyManagerAttribute() =
     inherit Attribute()
 
 module Attributes =
-    [<assembly: DependencyManagerAttribute()>]
+    [<assembly: DependencyManagerAttribute>]
     do ()
 
 type ScriptExtension = string
@@ -107,7 +162,15 @@ type HashRLines = string seq
 type TFM = string
 
 /// The results of ResolveDependencies
-type ResolveDependenciesResult (success: bool, stdOut: string array, stdError: string array, resolutions: string seq, sourceFiles: string seq, roots: string seq) =
+type ResolveDependenciesResult
+    (
+        success: bool,
+        stdOut: string array,
+        stdError: string array,
+        resolutions: string seq,
+        sourceFiles: string seq,
+        roots: string seq
+    ) =
 
     /// Succeded?
     member _.Success = success
@@ -129,72 +192,54 @@ type ResolveDependenciesResult (success: bool, stdOut: string array, stdError: s
 
 /// the type _must_ take an optional output directory
 [<DependencyManager>]
-type DependencyManager(outputDirectory: string option) =
+type DependencyManagerFsProj(outputDirectory: string option) =
     let workingDirectory =
-        // Calculate the working directory for dependency management
-        //   if a path wasn't supplied to the dependency manager then use the temporary directory as the root
-        //   if a path was supplied if it was rooted then use the rooted path as the root
-        //   if the path wasn't supplied or not rooted use the temp directory as the root.
-        let directory =
-            let path = Path.Combine(Process.GetCurrentProcess().Id.ToString() + "--"+ Guid.NewGuid().ToString())
-            match outputDirectory with
-            | None -> Path.Combine(Path.GetTempPath(), path)
-            | Some v ->
-                if Path.IsPathRooted(v) then Path.Combine(v, path)
-                else Path.Combine(Path.GetTempPath(), path)
-
-        lazy
-            try
-                if not (Directory.Exists(directory)) then
-                    Directory.CreateDirectory(directory) |> ignore
-                directory
-            with | _ -> directory
-
-    let parseOutput (output: string) =
-        output.Split(Environment.NewLine)
-
-    let emitFile path content =
-        try
-            File.WriteAllText(path, content)
-        with _ -> ()
-
-    let generateDebugOutput scriptDir mainScriptName scriptName packageManagerTextLines targetFramework (projects: ProjectOptions seq) loadScriptContent =
-        [|
-            $"================================"
-            $"WorkingDirectory: {workingDirectory.Value}"
-            $"ScriptDir: {scriptDir}"
-            $"MainScriptName: {mainScriptName}"
-            $"ScriptName: {scriptName}"
-            $"PackageManagerTextLines:"
-            for line in packageManagerTextLines do
-                $"  >{line}"
-            $"TargetFramework: {targetFramework}"
-            $"================================"
-            $"All projects:"
-            for proj in projects do
-                $" > {proj.ProjectFileName}: {proj.ProjectSdkInfo.TargetFramework} (IsRestored: {proj.ProjectSdkInfo.RestoreSuccess}, References: {proj.ReferencedProjects.Length})"
-            $"Load script content:"
-            $"--------------------------------"
-            $"{loadScriptContent}"
-            $"--------------------------------"
-        |]
+        FsProjDependencyManager.getOrCreateWorkingDirectory outputDirectory
 
     member val Key = "fsproj" with get
-    member val Name = "FsProj Dependency Manager" with get
-    member _.HelpMessages = [|
-        """    #r "fsproj: ./src/MyProj/MyProj.fsproj"; // loads all sources and packages from project MyProj.fsproj"""
-    |]
+    member val Name = "FsProj Dependency Manager (Using Ionide.ProjInfo)" with get
 
-    member _.ResolveDependencies(scriptDir: string, mainScriptName: string, scriptName: string, packageManagerTextLines: HashRLines, targetFramework: TFM) : ResolveDependenciesResult =
+    member _.HelpMessages =
+        [|
+            """    #r "fsproj: ./src/MyProj/MyProj.fsproj"; // loads all sources and packages from project MyProj.fsproj"""
+        |]
+
+    member _.ResolveDependencies
+        (
+            scriptDir: string,
+            mainScriptName: string,
+            scriptName: string,
+            packageManagerTextLines: HashRLines,
+            targetFramework: TFM
+        ) : ResolveDependenciesResult =
+
+        let baseDir = DirectoryInfo scriptDir
+
         try
-            let projectPaths =
-                packageManagerTextLines
-                |> List.ofSeq
-                |> List.map (fun line -> Path.Combine(scriptDir, line) |> Path.GetFullPath)
-            let resolutions, sources, stdError = FsProjDependencyManager.resolveDependencies scriptDir projectPaths
-            let output = [||]
+            let projects, missingProjects =
+                List.ofSeq packageManagerTextLines
+                |> FsProjDependencyManager.getProjectPaths baseDir
+                |> List.map FileInfo
+                |> List.partition (fun fi -> fi.Exists)
 
-            ResolveDependenciesResult(true, output, stdError, resolutions, sources, [])
+            if not (List.isEmpty missingProjects) then
+                let missingProjsStr = missingProjects |> List.map (fun fi -> fi.FullName) |> String.concat Environment.NewLine
+                failwith $"Missing project file(s): {missingProjsStr}"
+
+            let result =
+                projects
+                |> FsProjDependencyManager.resolveDependenciesOutOfProcess baseDir
+                |> FsProjDependencyManager.collectDependencies
+
+            let references = result.References
+            let sources = result.Sources
+
+            let generatedScriptName = $"{Guid.NewGuid()}.fsx"
+            let generatedScriptPath = Path.Combine (workingDirectory.Value, generatedScriptName)
+            let generatedScriptBody = FsProjDependencyManager.makeScriptFromReferences references
+            FsProjDependencyManager.emitFile generatedScriptPath generatedScriptBody
+
+            ResolveDependenciesResult(true, [||], [||], references, generatedScriptPath :: sources, [])
         with e ->
             printfn "exception while resolving dependencies: %s" (string e)
             ResolveDependenciesResult(false, [||], [| e.ToString() |], [], [], [])

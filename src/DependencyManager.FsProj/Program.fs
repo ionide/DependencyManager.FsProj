@@ -2,13 +2,19 @@ open System
 open System.IO
 open System.Text.Json
 
+open FSharp.SystemCommandLine
+
 open DependencyManager.FsProj
+
+type Dummy() = do ()
 
 let showUsage () =
     let installDir =
-        typeof<DependencyManager.FsProj.DependencyManager>.Assembly.Location
+        typeof<Dummy>.Assembly.Location
         |> System.IO.Path.GetDirectoryName
+
     let jsonFriendlyInstallDir = installDir.Replace("\\", "/")
+
     [
         "Usage: DependencyManager.FsProj.exe <list of projects>"
         ""
@@ -21,42 +27,90 @@ let showUsage () =
         "\"FSharp.fsiExtraParameters\": ["
         $"    \"--compilertool:{jsonFriendlyInstallDir}\""
         "]"
-    ] |> List.iter (printfn "%s")
+    ]
+    |> List.iter (printfn "%s")
 
-let toLoadScript (references, sources) =
-    List.concat [
-        references |> List.map FsProjDependencyManager.toHashRLine
-        sources |> List.map FsProjDependencyManager.toLoadSourceLine
+module Enum =
+    open FSharp.Reflection
+
+    let getAllValues<'a> =
+        FSharpType.GetUnionCases typeof<'a>
+        |> Array.map (fun case ->
+            try
+                FSharpValue.MakeUnion(case, [||]) :?> 'a
+            with
+            | :? Reflection.TargetParameterCountException ->
+                failwith $"{typeof<'a>.Name} is not an Enum. Case '{case.Name}' has some parameters.")
+        |> List.ofArray
+
+    let parse<'a> (text: string) =
+        getAllValues<'a>
+        |> List.tryFind (fun x -> (string x).ToLowerInvariant() = text.ToLowerInvariant())
+        |> Option.defaultWith (fun () -> failwith $"Invalid value for {typeof<'a>.Name}: '{text}'")
+
+[<RequireQualifiedAccess>]
+type Output =
+    | LoadScript
+    | Json
+    | Text
+
+let toLoadScript (result: FsProjDependenciesResult) =
+    [
+        for reference in result.References do
+            FsProjDependencyManager.toHashRLine reference
+        for source in result.Sources do
+            FsProjDependencyManager.toLoadSourceLine source
     ]
     |> String.concat Environment.NewLine
 
-let toJson (references, sources) =
-    JsonSerializer.Serialize
-        {
-            References = references
-            Sources = sources
-        }
+let toJson (projs: FsProjDependencies list) = JsonSerializer.Serialize projs
 
-let getPackagesAndSources (projectPaths: string []) =
-    let currentDir = Directory.GetCurrentDirectory()
-    let projectPaths = List.ofArray projectPaths |> List.map (fun path -> Path.Combine(currentDir, path) |> Path.GetFullPath)
-    let projects, _notifications = FsProjDependencyManager.loadProjects currentDir projectPaths
-    let packages = FsProjDependencyManager.getPackageReferences projects
-    let sources = FsProjDependencyManager.getSourceFiles projects
+let toText (projs: FsProjDependencies list) =
+    [
+        for proj in projs do
+            proj.ProjectPath
+            for reference in proj.References do
+                $"  Reference: {reference}"
+            for source in proj.Sources do
+                $"  Source: {source}"
+    ]
+    |> String.concat Environment.NewLine
 
-    packages, sources
+let showResult output (projs: FsProjDependencies list) =
+    match output with
+    | Output.LoadScript -> toLoadScript (FsProjDependencyManager.collectDependencies projs)
+    | Output.Json -> toJson projs
+    | Output.Text -> toText projs
+    |> printfn "%s"
 
+
+let handler (currDir: DirectoryInfo, output: string, outOfProcess: bool, fsprojs: FileInfo []) =
+    if Array.isEmpty fsprojs then
+        showUsage ()
+    else
+        let projects = List.ofArray fsprojs
+        if outOfProcess then
+            FsProjDependencyManager.resolveDependenciesOutOfProcess currDir projects
+        else
+            FsProjDependencyManager.resolveDependencies currDir projects
+        |> showResult (Enum.parse output)
 
 [<EntryPoint>]
 let main argv =
-    if Array.isEmpty argv
-    then showUsage ()
-    else
-        let options, projects = argv |> Array.partition (fun str -> str.StartsWith "--")
-        let references, sources = getPackagesAndSources projects
-        if options |> Array.contains "--json" then
-            toJson (references, sources)
-        else
-            toLoadScript (references, sources)
-        |> printfn "%s"
-    0
+    rootCommand argv {
+        description
+            "Generates load script for a fsproj file or if referenced as compilertool in fsi can be used as 'DependencyManager'."
+
+        inputs (
+            Input.Option<DirectoryInfo>(
+                [ "--dir"; "-d" ],
+                Directory.GetCurrentDirectory() |> DirectoryInfo,
+                "The engine to use to generate load script"
+            ),
+            Input.Option<string>([ "--output"; "-o" ], string Output.LoadScript, "The format of the output."),
+            Input.Option<bool>([ "--out-of-process"; "-p" ], false, "The format of the output."),
+            Input.Argument<FileInfo []>("The fsproj file to generate load script for")
+        )
+
+        setHandler handler
+    }
