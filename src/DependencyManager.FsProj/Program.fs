@@ -54,8 +54,11 @@ type Output =
     | Json
     | Text
 
-let toLoadScript (result: FsProjDependenciesResult) =
+let toLoadScript verbose (result: CollectedDependencies) =
     [
+        if verbose then
+            for notification in result.Notifications do
+                $"""//{notification.Replace("\n", "\n//")}"""
         for reference in result.References do
             FsProjDependencyManager.toHashRLine reference
         for source in result.Sources do
@@ -63,28 +66,28 @@ let toLoadScript (result: FsProjDependenciesResult) =
     ]
     |> String.concat Environment.NewLine
 
-let toJson (projs: FsProjDependencies list) = JsonSerializer.Serialize projs
-
-let toText (projs: FsProjDependencies list) =
+let toText verbose (result: FsProjDependenciesResult) =
     [
-        for proj in projs do
+        for proj in result.FsProjDependencies do
             proj.ProjectPath
             for reference in proj.References do
                 $"  Reference: {reference}"
             for source in proj.Sources do
                 $"  Source: {source}"
+        if verbose then
+            for notification in result.Notifications do
+                $"""Error: {notification.Replace("\n", "\n       ")}"""
     ]
     |> String.concat Environment.NewLine
 
-let showResult output (projs: FsProjDependencies list) =
+let showResult (output, verbose) (result: FsProjDependenciesResult) =
     match output with
-    | Output.LoadScript -> toLoadScript (FsProjDependencyManager.collectDependencies projs)
-    | Output.Json -> toJson projs
-    | Output.Text -> toText projs
+    | Output.LoadScript -> toLoadScript verbose (FsProjDependencyManager.collectDependencies result)
+    | Output.Json -> JsonSerializer.Serialize result
+    | Output.Text -> toText verbose result
     |> printfn "%s"
 
-
-let handler (currDir: DirectoryInfo, output: string, outOfProcess: bool, fsprojs: FileInfo []) =
+let handler (currDir: DirectoryInfo, output: string, outOfProcess: bool, verbose: bool, fsprojs: FileInfo []) =
     if Array.isEmpty fsprojs then
         showUsage ()
     else
@@ -93,7 +96,7 @@ let handler (currDir: DirectoryInfo, output: string, outOfProcess: bool, fsprojs
             FsProjDependencyManager.resolveDependenciesOutOfProcess currDir projects
         else
             FsProjDependencyManager.resolveDependencies currDir projects
-        |> showResult (Enum.parse output)
+        |> showResult (Enum.parse output, verbose)
 
 [<EntryPoint>]
 let main argv =
@@ -109,6 +112,7 @@ let main argv =
             ),
             Input.Option<string>([ "--output"; "-o" ], string Output.LoadScript, "The format of the output."),
             Input.Option<bool>([ "--out-of-process"; "-p" ], false, "The format of the output."),
+            Input.Option<bool>([ "--verbose"; "-v" ], false, "Show verbose output."),
             Input.Argument<FileInfo []>("The fsproj file to generate load script for")
         )
 

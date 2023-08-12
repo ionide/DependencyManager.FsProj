@@ -53,7 +53,7 @@ module Process =
 module DotNet =
     let restore (dotnetExe: FileInfo) (projPath: FileInfo) =
         let workingDir = projPath.Directory
-        Process.execute workingDir dotnetExe $"restore \"{projPath}\"" |> ignore
+        Process.execute workingDir dotnetExe $"restore \"{projPath}\""
 
 module SdkSetup =
     open System.Reflection

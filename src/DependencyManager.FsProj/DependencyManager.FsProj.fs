@@ -14,11 +14,18 @@ type FsProjDependencies =
         Sources: string list
     }
 
-type FsProjDependenciesResult =
+type FsProjDependenciesResult = 
+    {
+        FsProjDependencies: FsProjDependencies list
+        Notifications: string []
+    }
+
+type CollectedDependencies =
     {
         Projects: string list
         References: string list
         Sources: string list
+        Notifications: string []
     }
 
 module FsProjDependencyManager =
@@ -59,24 +66,42 @@ module FsProjDependencyManager =
                 Path.Combine(scriptDir.FullName, line) |> Path.GetFullPath)
 
     let loadProjects (baseDir: DirectoryInfo) (projects: FileInfo list) =
-        let notifications = ResizeArray()
-        let dotnetExe, _sdk = baseDir |> SdkSetup.getSdkFor
-        let toolsPath = Init.init baseDir (Some dotnetExe)
+        if List.isEmpty projects then
+            { FsProjDependencies = []; Notifications = [| "No projects to load" |] }
+        else
+            let notifications = ResizeArray()
+            let dotnetExe, sdk = baseDir |> SdkSetup.getSdkFor
+            notifications.Add $"Using SDK: {sdk.Version} from {sdk.Path}"
+            let toolsPath = Init.init baseDir (Some dotnetExe)
+            let existingProjects, notFoundProjects = projects |> List.partition (fun fi -> fi.Exists)
+            for notFoundProject in notFoundProjects do
+                notifications.Add $"Project not found: {notFoundProject.FullName}"
 
-        do projects |> Seq.iter (DotNet.restore dotnetExe)
+            for proj in existingProjects do
+                let result = DotNet.restore dotnetExe proj
+                if result.ExitCode <> 0 then
+                    notifications.Add $"Failed to restore project: {proj.FullName}"
+                    notifications.Add result.StdOut
+                    notifications.Add result.StdErr
+                else
+                    notifications.Add $"Restored project: {proj.FullName}"
 
-        let loader: IWorkspaceLoader = WorkspaceLoader.Create toolsPath
-        use _ = loader.Notifications.Subscribe(fun n -> notifications.Add $"%A{n}")
-        projects
-        |> List.map (fun fi -> fi.FullName)
-        |> loader.LoadProjects
-        |> List.ofSeq
-        |> List.map (fun proj ->
-            {
-                ProjectPath = proj.ProjectFileName
-                Sources = proj.SourceFiles
-                References = proj.PackageReferences |> List.map (fun pref -> pref.FullPath)
-            })
+            let loader: IWorkspaceLoader = WorkspaceLoader.Create toolsPath
+            use _ = loader.Notifications.Subscribe(fun n -> notifications.Add $"%A{n}")
+            let result = 
+                existingProjects
+                |> List.map (fun fi -> fi.FullName)
+                |> loader.LoadProjects
+                |> List.ofSeq
+                |> List.map (fun proj ->
+                    notifications.Add $"Loaded project: {proj.ProjectId}: {proj.ProjectFileName}"
+                    notifications.Add  $"  ItemCount: {proj.Items.Length}"
+                    {
+                        ProjectPath = proj.ProjectFileName
+                        Sources = proj.SourceFiles
+                        References = proj.PackageReferences |> List.map (fun pref -> pref.FullPath)
+                    })
+            { FsProjDependencies = result; Notifications = notifications.ToArray() }
 
     let filterOut (suffixes: string list) (paths: string list) =
         paths
@@ -108,11 +133,13 @@ module FsProjDependencyManager =
         references
         |> List.filter (isFSharpCore >> not)
 
-    let collectDependencies (projsDependencies: FsProjDependencies list) =
+    let collectDependencies (result: FsProjDependenciesResult) =
+        let projsDependencies = result.FsProjDependencies
         {
             Projects = projsDependencies |> List.map (fun p -> p.ProjectPath)
             References = projsDependencies |> List.collect (fun p -> filterOutFrameworkReferences p.References) |> List.distinct
             Sources = projsDependencies |> List.collect (fun p -> filterOutGeneratedSourceFiles p.ProjectPath p.Sources) |> List.distinct
+            Notifications = result.Notifications
         }
 
     let toHashRLine package = "#r @\"" + package + "\""
@@ -129,7 +156,7 @@ module FsProjDependencyManager =
         let depmanDll = getDependencyManagerPath()
         let projectsAsArgs = projects |> List.map (fun fi -> fi.FullName) |> String.concat " "
         let result = Process.execute baseDir dotnet $"{depmanDll} -o json {projectsAsArgs}"
-        JsonSerializer.Deserialize<FsProjDependencies list>(result.StdOut)
+        JsonSerializer.Deserialize<FsProjDependenciesResult>(result.StdOut)
 
     let makeScriptFromReferences references =
         [
@@ -227,8 +254,7 @@ type DependencyManagerFsProj(outputDirectory: string option) =
                 failwith $"Missing project file(s): {missingProjsStr}"
 
             let result =
-                projects
-                |> FsProjDependencyManager.resolveDependenciesOutOfProcess baseDir
+                FsProjDependencyManager.resolveDependenciesOutOfProcess baseDir projects
                 |> FsProjDependencyManager.collectDependencies
 
             let references = result.References
@@ -239,7 +265,7 @@ type DependencyManagerFsProj(outputDirectory: string option) =
             let generatedScriptBody = FsProjDependencyManager.makeScriptFromReferences references
             FsProjDependencyManager.emitFile generatedScriptPath generatedScriptBody
 
-            ResolveDependenciesResult(true, [||], [||], references, generatedScriptPath :: sources, [])
+            ResolveDependenciesResult(true, [| |], [| |], references, generatedScriptPath :: sources, [])
         with e ->
             printfn "exception while resolving dependencies: %s" (string e)
             ResolveDependenciesResult(false, [||], [| e.ToString() |], [], [], [])
