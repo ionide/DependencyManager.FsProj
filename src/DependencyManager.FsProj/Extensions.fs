@@ -20,10 +20,11 @@ module Process =
     open System.Text
     open System.Diagnostics
 
-    type ProcessResult =
-        { ExitCode: int
-          StdOut: string
-          StdErr: string }
+    type ProcessResult = {
+        ExitCode: int
+        StdOut: string
+        StdErr: string
+    }
 
     let execute (workDir: DirectoryInfo) (filePath: FileInfo) (args: string) =
         let psi =
@@ -46,9 +47,11 @@ module Process =
         proc.BeginOutputReadLine()
         proc.WaitForExit()
 
-        { ExitCode = proc.ExitCode
-          StdOut = output.ToString()
-          StdErr = error.ToString() }
+        {
+            ExitCode = proc.ExitCode
+            StdOut = output.ToString()
+            StdErr = error.ToString()
+        }
 
 module DotNet =
     let restore (dotnetExe: FileInfo) (projPath: FileInfo) =
@@ -61,9 +64,10 @@ module SdkSetup =
 
     let private resolveFromSdkRoot (sdkRoot: DirectoryInfo) : Func<AssemblyLoadContext, AssemblyName, Assembly> =
         Func<AssemblyLoadContext, AssemblyName, Assembly>(fun assemblyLoadContext assemblyName ->
-            let paths =
-                [ Path.Combine(sdkRoot.FullName, assemblyName.Name + ".dll")
-                  Path.Combine(sdkRoot.FullName, "en", assemblyName.Name + ".dll") ]
+            let paths = [
+                Path.Combine(sdkRoot.FullName, assemblyName.Name + ".dll")
+                Path.Combine(sdkRoot.FullName, "en", assemblyName.Name + ".dll")
+            ]
 
             match paths |> List.tryFind File.Exists with
             | Some path -> assemblyLoadContext.LoadFromAssemblyPath path

@@ -6,6 +6,4 @@ open SomeLibWithProjectRefsAndNuget
 
 Say.hello "Word"
 
-Person.create "Albert" 76
-|> JsonConvert.SerializeObject
-|> printfn "%s"
+Person.create "Albert" 76 |> JsonConvert.SerializeObject |> printfn "%s"

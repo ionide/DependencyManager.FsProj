@@ -1,4 +1,4 @@
-#I "../src/DependencyManager.FsProj/bin/Debug/net7.0"
+#I "../src/DependencyManager.FsProj/bin/Debug/net8.0"
 #r "DependencyManager.FsProj.dll"
 
 open System.IO
@@ -7,9 +7,11 @@ open DependencyManager.FsProj
 
 let (</>) p1 p2 = Path.Combine(p1, p2)
 
-let projPath = __SOURCE_DIRECTORY__ </> "SimpleLib" </> "SimpleLib.fsproj"
+let projPath =
+    __SOURCE_DIRECTORY__ </> "SimpleLib" </> "SimpleLib.fsproj" |> FileInfo
 
-let packages, source, stdError = FsProjDependencyManager.resolveDependencies __SOURCE_DIRECTORY__ [ projPath ]
+let baseDir = DirectoryInfo(__SOURCE_DIRECTORY__)
+let result = FsProjDependencyManager.resolveDependencies baseDir [ projPath ]
 // #r "nuget: Ionide.ProjInfo, 0.55.4"
 // #r "nuget: Ionide.ProjInfo.ProjectSystem, 0.55.4"
 

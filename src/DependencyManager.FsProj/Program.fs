@@ -6,12 +6,11 @@ open FSharp.SystemCommandLine
 
 open DependencyManager.FsProj
 
-type Dummy() = do ()
+type Dummy() =
+    do ()
 
 let showUsage () =
-    let installDir =
-        typeof<Dummy>.Assembly.Location
-        |> System.IO.Path.GetDirectoryName
+    let installDir = typeof<Dummy>.Assembly.Location |> System.IO.Path.GetDirectoryName
 
     let jsonFriendlyInstallDir = installDir.Replace("\\", "/")
 
@@ -38,8 +37,7 @@ module Enum =
         |> Array.map (fun case ->
             try
                 FSharpValue.MakeUnion(case, [||]) :?> 'a
-            with
-            | :? Reflection.TargetParameterCountException ->
+            with :? Reflection.TargetParameterCountException ->
                 failwith $"{typeof<'a>.Name} is not an Enum. Case '{case.Name}' has some parameters.")
         |> List.ofArray
 
@@ -70,8 +68,10 @@ let toText verbose (result: FsProjDependenciesResult) =
     [
         for proj in result.FsProjDependencies do
             proj.ProjectPath
+
             for reference in proj.References do
                 $"  Reference: {reference}"
+
             for source in proj.Sources do
                 $"  Source: {source}"
         if verbose then
@@ -87,11 +87,12 @@ let showResult (output, verbose) (result: FsProjDependenciesResult) =
     | Output.Text -> toText verbose result
     |> printfn "%s"
 
-let handler (currDir: DirectoryInfo, output: string, outOfProcess: bool, verbose: bool, fsprojs: FileInfo []) =
+let handler (currDir: DirectoryInfo, output: string, outOfProcess: bool, verbose: bool, fsprojs: FileInfo[]) =
     if Array.isEmpty fsprojs then
         showUsage ()
     else
         let projects = List.ofArray fsprojs
+
         if outOfProcess then
             FsProjDependencyManager.resolveDependenciesOutOfProcess currDir projects
         else
@@ -113,7 +114,7 @@ let main argv =
             Input.Option<string>([ "--output"; "-o" ], string Output.LoadScript, "The format of the output."),
             Input.Option<bool>([ "--out-of-process"; "-p" ], false, "The format of the output."),
             Input.Option<bool>([ "--verbose"; "-v" ], false, "Show verbose output."),
-            Input.Argument<FileInfo []>("The fsproj file to generate load script for")
+            Input.Argument<FileInfo[]>("The fsproj file to generate load script for")
         )
 
         setHandler handler
