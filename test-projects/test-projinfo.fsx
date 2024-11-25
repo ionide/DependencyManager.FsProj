@@ -1,5 +1,5 @@
-#r "nuget: Ionide.ProjInfo, 0.55.4"
-#r "nuget: Ionide.ProjInfo.ProjectSystem, 0.55.4"
+#r "nuget: Ionide.ProjInfo, 0.68"
+#r "nuget: Ionide.ProjInfo.ProjectSystem, 0.68"
 
 open System
 open System.IO

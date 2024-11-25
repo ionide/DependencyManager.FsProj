@@ -1,4 +1,4 @@
-#I "../src/DependencyManager.FsProj/bin/Debug/net8.0"
+#I "../src/DependencyManager.FsProj/bin/Debug/net9.0"
 #r "DependencyManager.FsProj.dll"
 
 open System.IO

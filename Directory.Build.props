@@ -1,11 +1,11 @@
 <Project>
     <PropertyGroup>
-        <Version>0.2.9</Version>
+        <Version>0.2.10</Version>
         <Authors>Tomas Leko</Authors>
         <Description>
             This nuget package enables loading .fsproj files in .fsx scripts.
             To use it install nuget package and add command line option "--compilertool:directory_containing_dependencymanager"
-            or if you are using ionide add the line to "FSharp.fsiExtraParameters".
+            or if you are using ionide add the line to "FSharp.FSIExtraInteractiveParameters" and "FSharp.FSIExtraSharedParameters".
         </Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseUrl>LICENSE.md</PackageLicenseUrl>

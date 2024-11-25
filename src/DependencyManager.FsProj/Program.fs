@@ -23,7 +23,10 @@ let showUsage () =
         $"dotnet fsi --compilertool:{installDir} <script-file.fsx>"
         ""
         "To use as DependencyManager with ionide add following to your .vscode/settings.json:"
-        "\"FSharp.fsiExtraParameters\": ["
+        "\"FSharp.FSIExtraInteractiveParameters\": ["
+        $"    \"--compilertool:{jsonFriendlyInstallDir}\""
+        "],"
+        "\"FSharp.FSIExtraSharedParameters\": ["
         $"    \"--compilertool:{jsonFriendlyInstallDir}\""
         "]"
     ]
