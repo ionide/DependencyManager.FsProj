@@ -1,7 +1,4 @@
 {
-  "FSharp.fsiExtraParameters": [
-    "--compilertool:C:/Users/leko.tomas/source/DependencyManager.FsProj/.depman-fsproj/.store/depman-fsproj/0.2.8/depman-fsproj/0.2.8/tools/net8.0/any"
-  ],
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": ".github/workflows/build.yml"
   },
