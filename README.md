@@ -1,7 +1,10 @@
+> [!NOTE]
+> This is almost entirely based on the work of [Ionide](https://github.com/ionide/DependencyManager.FsProj) and the supsequent fork of [Thonas Leko](https://github.com/ThisFunctionalTom/DependencyManager.FsProj). I’ve updated some things there and there to run on the latest .NET Core SDK and [Ionide.ProjInfo](https://github.com/ionide/proj-info). I personally daily drive this tool for development purposes.
+
 # DependencyManager.FsProj
 
-This nuget package enables loading `.fsproj` files in `.fsx` scripts.
-It extends `#r` syntax with `fsproj` dependency manager, so you can do `#r "fsproj: PATH_TO_FSPROJ.fsproj"` and it will load all references and files from the project.
+This NuGet package enables loading `.fsproj` files in `.fsx` scripts.
+It extends `#r` syntax with `fsproj` dependency manager, so you can do `#r "fsproj: PATH_TO_FSPROJ.fsproj"`, and it will load all references and files from the project.
 
 Sample:
 
@@ -27,7 +30,7 @@ Run `dotnet tool install --global depman-fsproj` and once it is installed run `d
 
 *Imposter syndrome disclaimer*: I want your help. No really, I do.
 
-There might be a little voice inside that tells you you're not ready; that you need to do one more tutorial, or learn another framework, or write a few more blog posts before you can help me with this project.
+There might be a little voice inside that tells you're not ready; that you need to do one more tutorial, or learn another framework, or write a few more blog posts before you can help me with this project.
 
 I assure you, that's not the case.
 
