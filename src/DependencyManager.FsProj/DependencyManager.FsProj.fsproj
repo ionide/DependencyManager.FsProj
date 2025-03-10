@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>depman-fsproj</PackageId>
+    <PackageId>fradav.depman-proj</PackageId>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>depman-fsproj</ToolCommandName>
+    <ToolCommandName>fradav.depman-proj</ToolCommandName>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />

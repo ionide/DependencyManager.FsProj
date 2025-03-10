@@ -1,5 +1,9 @@
+[![NuGet Package](https://img.shields.io/nuget/v/fradav.depman-proj.svg)](https://www.nuget.org/packages/fradav.depman-proj/)
+[![GitHub Actions Status](https://github.com/fradav/DependencyManager.FsProj/actions/workflows/build.yml/badge.svg)](https://github.com/fradav/DependencyManager.FsProj/actions)
+
+
 > [!NOTE]
-> This is almost entirely based on the work of [Ionide](https://github.com/ionide/DependencyManager.FsProj) and the supsequent fork of [Thonas Leko](https://github.com/ThisFunctionalTom/DependencyManager.FsProj). I’ve updated some things there and there to run on the latest .NET Core SDK and [Ionide.ProjInfo](https://github.com/ionide/proj-info). I personally daily drive this tool for development purposes.
+> This is almost entirely based on the work of [Ionide](https://github.com/ionide/DependencyManager.FsProj) and the subsequent fork of [Thomas Leko](https://github.com/ThisFunctionalTom/DependencyManager.FsProj). I've updated some things there and there to run on the latest .NET Core SDK (9.0.x) and [Ionide.ProjInfo](https://github.com/ionide/proj-info). I personally daily drive this tool for development purposes.
 
 # DependencyManager.FsProj
 
@@ -17,7 +21,7 @@ printfn "RESULT: %s" t
 
 ## Installation
 
-Run `dotnet tool install --global depman-fsproj` and once it is installed run `depman-fsproj` for instructions.
+Run `dotnet tool install --global fradav.depman-proj` and once it is installed run `fradav.depman-proj` for instructions.
 
 ## Build locally
 
@@ -34,7 +38,7 @@ There might be a little voice inside that tells you're not ready; that you need 
 
 I assure you, that's not the case.
 
-This project has some clear Contribution Guidelines and expectations that you can [read here](https://github.com/ThisFunctionalTom/DependencyManager.FsProj/blob/master/CONTRIBUTING.md).
+This project has some clear Contribution Guidelines and expectations that you can [read here](https://github.com/fradav/DependencyManager.FsProj/blob/master/CONTRIBUTING.md).
 
 The contribution guidelines outline the process that you'll need to follow to get a patch merged. By making expectations and process explicit, I hope it will make it easier for you to contribute.
 
@@ -44,9 +48,9 @@ Thank you for contributing!
 
 ## Contributing and copyright
 
-The project is hosted on [GitHub](https://github.com/ThisFunctionalTom/DependencyManager.FsProj) where you can [report issues](https://github.com/ThisFunctionalTom/DependencyManager.FsProj/issues), fork
+The project is hosted on [GitHub](https://github.com/fradav/DependencyManager.FsProj) where you can [report issues](https://github.com/fradav/DependencyManager.FsProj/issues), fork
 the project and submit pull requests.
 
-The library is available under [MIT license](https://github.com/ThisFunctionalTom/DependencyManager.FsProj/blob/master/LICENSE.md), which allows modification and redistribution for both commercial and non-commercial purposes.
+The library is available under [MIT license](https://github.com/fradav/DependencyManager.FsProj/blob/master/LICENSE.md), which allows modification and redistribution for both commercial and non-commercial purposes.
 
 Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
