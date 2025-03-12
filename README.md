@@ -1,4 +1,4 @@
-[![NuGet Package](https://img.shields.io/nuget/v/fradav.depman-proj.svg)](https://www.nuget.org/packages/fradav.depman-proj/)
+[![NuGet Package](https://img.shields.io/nuget/v/depman-fsproj.svg)](https://www.nuget.org/packages/depman-fsproj/)
 [![GitHub Actions Status](https://github.com/fradav/DependencyManager.FsProj/actions/workflows/build.yml/badge.svg)](https://github.com/fradav/DependencyManager.FsProj/actions)
 
 
@@ -21,7 +21,7 @@ printfn "RESULT: %s" t
 
 ## Installation
 
-Run `dotnet tool install --global fradav.depman-proj` and once it is installed run `fradav.depman-proj` for instructions.
+Run `dotnet tool install --global depman-fsproj` and once it is installed run `depman-fsproj` for instructions.
 
 ## Build locally
 

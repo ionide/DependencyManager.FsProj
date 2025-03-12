@@ -5,5 +5,5 @@ paket-files
 .DS_Store
 .idea/
 .fake
-.fradav.depman-proj/
+.depman-fsproj/
 .nupkg/
