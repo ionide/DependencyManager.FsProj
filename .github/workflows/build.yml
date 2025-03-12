@@ -18,11 +18,11 @@ jobs:
           8.0.x
     - name: Restore dependencies
       run: dotnet tool restore; dotnet restore
-    - name: Build
-      run: dotnet build -c Release --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
-    - name : Publish if tag present
+    - name: Build and test
+      run: |
+        dotnet build --no-restore
+        dotnet test --no-build --verbosity normal
+    - name : Pack and Publish if tag present
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
         dotnet pack -c Release -o nuget-packages --no-build
