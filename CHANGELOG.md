@@ -1,5 +1,7 @@
 # Changelog
 
-## [1.0.0] - 2022-01-24
+## [0.2.11] - 2025-03-12
 
-- Use Ionide.ProjInfo to load all project files recursively and generate load script and collect source files
+### Changed
+
+- [working version for dotnet 9](https://github.com/ionide/DependencyManager.FsProj/pull/5) Thanks @fradav!
