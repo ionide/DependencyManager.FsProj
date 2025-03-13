@@ -1,1 +1,0 @@
-docker run --rm -it -v "${pwd}:/app" -w "/app" mcr.microsoft.com/dotnet/core/sdk:5.0.100-preview bash
