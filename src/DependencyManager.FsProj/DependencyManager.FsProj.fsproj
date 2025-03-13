@@ -3,6 +3,7 @@
   <PropertyGroup>
     <PackageId>depman-fsproj</PackageId>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <RollForward>LatestMajor</RollForward>
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>depman-fsproj</ToolCommandName>
